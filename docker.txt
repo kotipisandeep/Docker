@@ -1,0 +1,461 @@
+GITHUB CREDENTIALS:
+--------------------------
+
+sandeepfile
+Sandeep@#£8008
+
+
+https://hub.docker.com/repositories/sandeepfile
+
+
+To change Docker's default directory where it stores images, containers, volumes, and other data (usually /var/lib/docker), you can follow these steps:
+
+1. Stop the Docker Service
+First, stop the Docker service to ensure it’s not running during the configuration change:
+
+sudo systemctl stop docker
+
+2. Create a New Directory
+Choose a new directory where you want Docker to store its data. For example, let's create a new directory at /data/docker:
+
+sudo mkdir -p /data/docker
+
+3. Move Existing Docker Data (Optional)
+If you want to keep the current Docker data, you can move it to the new directory:
+
+
+sudo mv /var/lib/docker /data/docker
+
+4. Update the Docker Configuration
+Next, you need to configure Docker to use the new directory. Edit the Docker daemon configuration file:
+
+sudo nano /etc/docker/daemon.json
+
+If the file doesn't exist, create it. Add or modify the following configuration to set the new data-root directory:
+
+json
+Copy code
+{
+  "data-root": "/data/docker"
+}
+
+Save and exit the file.
+
+5. Restart the Docker Service
+Once you have updated the configuration, restart Docker:
+
+
+sudo systemctl start docker
+6. Verify the Changes
+To verify that Docker is using the new directory, you can check the active configuration:
+
+
+docker info | grep "Docker Root Dir"
+This should show the new path (e.g., /data/docker).
+
+Notes:
+Ensure that the new directory has enough space for Docker operations.
+You may need to adjust permissions on the new directory if Docker encounters permission issues.
+This change will persist across reboots and Docker updates.
+
+
+
+UCP : Universal control plain 
+docker trusted registory
+
+
+DOCKER INSTALATION
+---------------------
+we found some issue while enabling  docker service in server.
+
+ERROR:unable to find docker.service
+
+Note : Run below dnf command to apply all the available updates and then reboot
+----------------------------------------------------------------------------------
+dnf update -y ; reboot
+Installation Steps of Docker CE on CentOS 8/RHEL 8 Server
+Step:1) Enable Docker CE Repository
+-----------------------------------------
+dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+
+Step:2) Install Docker CE using dnf command
+----------------------------------------------
+ dnf list docker-ce
+dnf install docker-ce --nobest -y
+systemctl start docker
+systemctl enable docker
+systemctl enable docker
+
+Verify and test Docker CE Engine
+----------------------------------
+docker run hello-world
+Step:4) Install Docker Compose
+--------------------------------------
+dnf install curl -y
+curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+docker-compose --version
+
+
+
+
+
+DOCKER
+----------------------------------
+AMI---->is a package of vm it contains os + softwares
+DOCKER IMAGE-----> is a package it contains code and dependency and required softwares
+FROM ----->will take image from registry(dockerhub),hub.docker.com
+
+FROM jboss/wildfly
+ADD your-awesome-app.war /opt/jboss/wildfly/standalone/deployments/
+docker build -t imagename:tag buildcontext----->to build image
+
+TO BUILD IMMAGE USING NEXUS REGSTRY
+---------------------------------------------------
+docker build -t <nexusserevrip:port>/<reponame>
+             (or)
+docker build -t <domainname>/<reponame>
+
+docker create --name <containername>  -p <hostport>:<containerport> -e <key>=<value> -v <Bindmountpath/volumename:/<path>> --network <networkname> -m 500mi --cpu "0.5"<imagename>
+NOTE: -m and --cpu will applicable only on container not to service.
+
+docker volumes
+--------------
+bind volume----
+-mount type=bind,source="pwd",target=/data/db
+
+-v pwd:/data/db   (both are same)	
+By default, Docker creates new volumes with the built-in local driver. As the name suggests, 
+volumes created with the local driver are only available to containers on the same node as the volume. 
+You can use the -d flag to specify a different driver. Third-party volume drivers are available as plugins. 
+
+For example, the following creates a tmpfs volume called foo with a size of 100 megabyte and uid of 1000
+
+*docker volume create --driver local \
+    --opt type=tmpfs \
+    --opt device=tmpfs \
+    --opt o=size=100m,uid=1000 \
+    foo
+Persistance volume:
+----------------------
+will maintain the details about the volumes.
+1> local volume: it will use host machine storage. it will store all data in this path (/var/lib/docker/volumes/<volume_name>/_data)
+2> external volume: it an external storage like EFS,S3,EBS,NFS,AZUREFILE,AZUREDISK 
+
+docker networks
+-------------------
+Network drivers in Docker
+Network drivers
+bridge : The default network driver. ...
+host : For standalone containers, remove network isolation between the container and the Docker host, and use the host's networking directly. ...
+overlay : Overlay networks connect multiple Docker daemons together and enable swarm services to communicate with each other.
+
+*docker network create -d bridge my-bridge-network
+*docker network create \
+  --driver=bridge \
+  --subnet=172.28.0.0/16 \
+  --ip-range=172.28.5.0/24 \
+  --gateway=172.28.5.254 \
+  br0
+
+Docker swarm
+------------------
+#!bin/bash
+sudo apt-get update
+sudo apt-get install curl -y 
+sudo curl -fsSL get.docksal.io | bash
+sudo usermode -aG docker ubuntu
+ 
+
+tcp and udp 7946 -->for communication amoung node
+tcp 2377 -->for cluster communication
+udp 4789-->for overlay nertwork traffic 
+
+
+In docker swarm we depoy applicaton using serveice.there are two types of service-->1.replica mode 2.global mode
+
+docker service create --name  <servicename> -p <hp:cp> <imagename>--->if dont give any  replica and network, it will create in default replica and default networks
+
+default network is --->overlay network
+defult mode is -->replica mode
+
+docker service create --name  <servicename> -p <hp:cp> --replicas 3 <imagename>-->Here replica will create replicas(cntainer) for application
+docker service create --name  <servicename> -p <hp:cp> --replicas 3 --constraint "node.role==worker" <imagename>-->here container will craete only in nodes
+
+docker service ls--->to see services
+docker service ps <servicename>-->to see in which node srvice is running
+docker node ls--->to see nodes of cluster
+docker service scale <servicename>=3--->will create 3 replicas from service
+docker service rm <sn>--->to delete service
+docker service update --image <in>  <sn>--->to update old service with new image
+docker node ps <nodename>-->to see containers in node
+docker service create --name  <servicename> -p <hp:cp> --update-delay 30s --update-parallesium 1 <imagename>--->
+* --update-delay 30s --update-parallesium 1---> this is called rolling update without downtime of service
+
+docker service inspect <sn>----> to inspect into service
+docker service rollback <sn>-->to go back to last image of service
+
+GLOBAL MODE
+-----------
+in global mode sevice will have one container in each and every node
+we cant scale repicals in global mode
+docker service create --name  <servicename> -p <hp:cp> --mode global <imagename>
+docker service update --availabilty drain <nodeid/nodename>--->will drain the node from container
+
+
+LABES AND CONTRAINTS
+------------------------
+these are used to specify the nodes in which we want to deploy appliction 
+docker node update --lable-add storagetype=ssd <nodeid/nodename>---->to add lables to that node,then we can use constrait to deploy app in only defined nodes
+docker service create --name  <servicename> -p <hp:cp> --replicas 3 --constaint "node.lable.storagetype==ssd" <imagename>--->it will deploy containes in only ssd stroragetype nodes
+ 
+DOCKER COMPOSE
+--------------------------
+it's a tool for deploying mulitiple container .
+compose contains information about how to build the container and deploy the container.
+
+Docker Compose
+==============
+
+Docker Compose is a tool for defining and running multicontainer applications.
+
+
+With out compose to deploy above applications which has only 2 images we executed below commnads.
+
+
+docker network create -d bridge springappnetwork
+
+docker volume create -d local mongobkp
+
+ docker run -d --name mongo -v mongobkp:/data/db -e MONGO_INITDB_ROOT_USERNAME=devdb -e MONGO_INITDB_ROOT_PASSWORD=devdb1234  --network springappnetwork mongo
+ 
+ docker run -d -p 8080:8080 --name springapp  -e MONGO_DB_HOSTNAME=mongo -e MONGO_DB_USERNAME=devdb -e MONGO_DB_PASSWORD=devdb1234 --network springappnetwork dockerhandson/spring-boot-mongo
+ 
+
+With Docker Compose we deploy/create all of the above 4 with single command using compose file.
+
+
+With Compose
+
+Install docker compose using below command:
+
+sudo apt install docker-compose
+
+We will define all the serivces(cotainers) details in compose file using compose file we can deploy multi container applications.
+
+Defautl name : docker-compose.yml or docker-compose.yaml
+
+
+Example 1: (Volumes & Networks also will be created by docker compose)
+
+
+version: '3.1'
+
+services:
+  springboot:
+    image: dockerhandson/spring-boot-mongo:latest
+    restart: always # This will be ignored if we deploy in docker swarm
+    container_name: springboot
+    environment:
+    - MONGO_DB_HOSTNAME=mongo
+    - MONGO_DB_USERNAME=devdb
+    - MONGO_DB_PASSWORD=devdb1234
+    ports:
+      - 8080:8080
+    working_dir: /opt/app
+    depends_on:
+      - mongo
+    deploy:  # This will be considered only in docker swarm.
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 20s
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+    networks:
+    - springappnetwork
+
+  mongo:
+    image: mongo
+    container_name: springboot-mongo
+    environment:
+    - MONGO_INITDB_ROOT_USERNAME=devdb
+    - MONGO_INITDB_ROOT_PASSWORD=devdb1234
+    volumes:
+      - mongobkp:/data/db
+    restart: always
+    networks:
+    - springappnetwork
+    
+volumes:
+  mongobkp:
+    driver: local
+    
+networks:
+  springappnetwork:
+    driver: bridge
+	  
+  
+ 
+Commands
+# Syntax Check
+docker-compose config 
+# Create Services/Contianers
+docker-compose up -d  
+  
+# Remove Services/Contianers 
+docker-compose down	  
+
+
+
+Example 2: (Volumes & Networks will not be created by docker compose.As we set volumes and networks as external)
+==========
+ 
+version: '3.1'
+
+services:
+  springboot:
+    image: dockerhandson/spring-boot-mongo:latest
+    restart: always # This will be ignored if we deploy in docker swarm
+    container_name: springboot
+    environment:
+    - MONGO_DB_HOSTNAME=mongo
+    - MONGO_DB_USERNAME=devdb
+    - MONGO_DB_PASSWORD=devdb1234
+    ports:
+      - 8080:8080
+    working_dir: /opt/app
+    depends_on:
+    - mongo
+    deploy:  # This will be considered only in docker swarm.
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 20s
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+    networks:
+    - flipkartnetwork
+  mongo:
+    image: mongo
+    container_name: springboot-mongo
+    environment:
+    - MONGO_INITDB_ROOT_USERNAME=devdb
+    - MONGO_INITDB_ROOT_PASSWORD=devdb1234
+    volumes:
+      - mongodb:/data/db
+    restart: always
+    networks:
+    - flipkartnetwork
+    
+volumes:
+  mongodb:
+    external: true
+    
+networks:
+  flipkartnetwork:
+    external: true
+	
+	
+If docker compose file with custom name.	
+docker-compose -f <CustomeComposeFileName>.yml <command>
+
+Ex:
+docker-compose -f docker-compose-springapp.yml config
+docker-compose -f docker-compose-springapp.yml up -d
+
+docker-compose -f docker-compose-springapp.yml down
+
+
+Docker Compose Commands:
+
+  config             Validate and view the Compose file :docker-compose cofig
+  create             Create services
+  down               Stop and remove containers, networks, images, and volumes
+  exec               Execute a command in a running container
+  help               Get help on a command
+  images             List images
+  kill               Kill containers
+  logs               View output from containers
+  pause              Pause services
+  port               Print the public port for a port binding
+  ps                 List containers
+  pull               Pull service images
+  push               Push service images
+  restart            Restart services
+  rm                 Remove stopped containers
+  run                Run a one-off command
+  scale              Set number of containers for a service
+  start              Start services
+  stop               Stop services
+  top                Display the running processes
+  unpause            Unpause services
+  up                 Create and start containers
+  version            Show the Docker-Compose version information
+
+
+
+
+
+# In Normal(Standalone) Docker Server We can use below command to create a containers.
+docker-compose up
+
+# In docker swarm we will use below command to deploy services using docker compose.
+docker stack deploy --compose-file docker-compose.yml <stackName>
+
+
+
+
+
+Containerization Tools: docker,rocker(rkt),coreos
+
+Container Orchestration Tools: docker swarm,kubernetes,openshift ..etc
+
+
+
+H.A --> HighAvailability
+F.T --> Fault Tolarence
+Scalability
+L.B
+
+
+
+
+# In Normal(Standalone) Docker Server We can use below command to create a container.
+docker run -d -p <hostPort>:<containerPort> --name <containerName> <imageName>
+
+# In docker swarm we will use below command to deploy service.
+docker service create --name <serviceName> -p <hostPort>:<containerPort>  <imageName>
+
+# In Normal(Standalone) Docker Server We can use below command to create a containers from compose.
+docker-compose up
+
+# In docker swarm we will use below command to deploy services using docker compose.
+docker stack deploy --compose-file docker-compose.yml <stackName>
+
+
+
+
+
+
+MULTI APPLICTION DEPLOYMENT IN SWARM
+-------------------------------------------
+we use docker compose file
+ 
+docker service -->is a collection of container of immage
+docker stack----> is a colleection of service of application
+
+docker stack deploy --compose-file <filename> <stackname(wehavetogive)> ---->to deploy multipule applications
+docker stack ls-->to see stacks
+docker stack ps <stackname>-->will give which stack is running in which node
+
+
+
+
+      DOCKERFILS
+-----------------------------------
+
