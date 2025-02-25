@@ -1,11 +1,49 @@
+
 GITHUB CREDENTIALS:
 --------------------------
 
-sandeepfile
-Sandeep@#£8008
+Git Hub login:
+-----------------
+https://github.com/kotipisandeep
 
+username: kotipisandeep
+password: Sandeep!@8008
+
+username: sandeepreddy-8008
+password: Sandeep!@8008
+
+git push https://kotipisandeep:ghp_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@github.com/kotipisandeep/k8s-manifesties.git
 
 https://hub.docker.com/repositories/sandeepfile
+
+
+ERROR:
+-----------
+root@fgegovdbsrv:/opt/DB/Docker# git push
+Username for 'https://github.com': kotipisandeep
+Password for 'https://kotipisandeep@github.com':
+remote: Support for password authentication was removed on August 13, 2021.
+remote: Please see https://docs.github.com/get-started/getting-started-with-git/about-remote-repositories#cloning-with-https-urls for information on currently recommended modes of authentication.
+
+#If you face above error even after configuring SSH pub key for authentication in same vm from other repository.We need to set persernt working repo uri for remote anr push.
+
+As below:
+----------
+root@fgegovdbsrv:/opt/DB/Docker# git remote -v
+origin  https://github.com/kotipisandeep/Docker.git (fetch)
+origin  https://github.com/kotipisandeep/Docker.git (push)
+
+root@fgegovdbsrv:/opt/DB/Docker# git remote set-url origin git@github.com:kotipisandeep/Docker.git
+
+root@fgegovdbsrv:/opt/DB/Docker# git push
+Enumerating objects: 10, done.
+Counting objects: 100% (10/10), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (10/10), done.
+Writing objects: 100% (10/10), 12.56 MiB | 3.79 MiB/s, done.
+Total 10 (delta 0), reused 0 (delta 0)
+To github.com:kotipisandeep/Docker.git
+ * [new branch]      master -> master
 
 
 To change Docker's default directory where it stores images, containers, volumes, and other data (usually /var/lib/docker), you can follow these steps:
